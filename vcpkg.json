@@ -1,19 +1,13 @@
 {
   "dependencies": [
-    "casadi",
     {
       "name": "opencv4",
       "features": [
-        "eigen",
         "highgui",
-        "openvino",
-        "ovis",
-        "png",
-        "quality",
-        "sfm"
+        "png"
       ],
       "version>=": "4.10.0"
     },
-    "coin-or-ipopt"
+    "nlohmann-json"
   ]
 }

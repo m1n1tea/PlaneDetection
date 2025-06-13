@@ -9,6 +9,12 @@
       "kind": "artifact",
       "location": "https://github.com/microsoft/vcpkg-ce-catalog/archive/refs/heads/main.zip",
       "name": "microsoft"
+    },
+    {
+      "baseline" : "4afc91838e59f3878048e922d8b3a5ba70561638",
+      "kind": "git",
+      "repository": "https://github.com/m1n1tea/casadi_vcpkg_regestry_test",
+      "packages": [ "casadi" ]
     }
   ]
 }

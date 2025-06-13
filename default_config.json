@@ -1,0 +1,28 @@
+{
+  "focal_length_estimation": {
+    "adjacency_angle_threshold": 0.17453292519943295,
+    "adjacency_relative_length_threshold": 1.02,
+    "focal_length": 0,
+    "focal_length_mult": 1.5,
+    "vanishing_point_absolute_threshold": 10,
+    "vanishing_point_relative_threshold": 0.03
+  },
+  "plane_labeling": {
+    "adjacency_angle_threshold": 0.17453292519943295,
+    "adjacency_relative_length_threshold": 2
+  },
+  "plane_orientation_detection": {
+    "adjacency_angle_threshold": 0.17453292519943295,
+    "adjacency_relative_length_threshold": 1.25,
+    "plane_absolute_threshold": 10,
+    "plane_relative_threshold": 0.1,
+    "ransac_threshold": 0.01,
+    "ransac_tries": 1000
+  },
+  "plane_post_processing": {
+    "gaps_relative_part": 0.05,
+    "noise_relative_part": 0.05
+  },
+  "save_intermediate_steps": true,
+  "verbose": true
+}

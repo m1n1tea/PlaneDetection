@@ -1,0 +1,5 @@
+﻿add_subdirectory ("focal_length_estimation")
+add_subdirectory ("plane_detection_utils")
+add_subdirectory ("plane_orientation_detection")
+add_subdirectory ("plane_labeling")
+add_subdirectory ("plane_post_processing")
