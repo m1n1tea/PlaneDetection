@@ -26,6 +26,6 @@ std::vector<std::set<int>> findConflictGraph(const std::vector<std::vector<cv::P
 void drawContour4(cv::Mat &image, std::vector<cv::Point2f> vertices2f, cv::Scalar color);
 
 std::vector<cv::Mat> findPlaneRegions(const std::vector<PlaneInfo> &planes, const std::vector<LineSegment> &lines,
-                                      double f, cv::Size img_size);
+                                      double f, cv::Point2f principal_point, cv::Size img_size);
 
 #endif  // PLANE_LABELING

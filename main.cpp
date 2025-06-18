@@ -26,19 +26,22 @@ nlohmann::json getDefaultConfig()
     nlohmann::json config;
     config["save_intermediate_steps"] = false;
     config["verbose"] = true;
+    config["focal_length"] = 0;
+    config["principal_point"] = nlohmann::json::array();
+    config["principal_point"][0] = -1;
+    config["principal_point"][1] = -1;
 
     config["focal_length_estimation"] = nlohmann::json();
-    config["focal_length_estimation"]["focal_length"] = 0;
     config["focal_length_estimation"]["adjacency_relative_length_threshold"] = 1.02;
     config["focal_length_estimation"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
-    config["focal_length_estimation"]["vanishing_point_relative_threshold"] = 0.03;
+    config["focal_length_estimation"]["vanishing_point_relative_threshold"] = 0.1;
     config["focal_length_estimation"]["vanishing_point_absolute_threshold"] = 10;
-    config["focal_length_estimation"]["focal_length_mult"] = 1.5;
+    config["focal_length_estimation"]["focal_length_mult"] = 1;
 
     config["plane_orientation_detection"] = nlohmann::json();
     config["plane_orientation_detection"]["adjacency_relative_length_threshold"] = 1.25;
     config["plane_orientation_detection"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
-    config["plane_orientation_detection"]["ransac_threshold"] = 0.01;
+    config["plane_orientation_detection"]["ransac_threshold"] = 0.002;
     config["plane_orientation_detection"]["ransac_tries"] = 1000;
     config["plane_orientation_detection"]["plane_relative_threshold"] = 0.1;
     config["plane_orientation_detection"]["plane_absolute_threshold"] = 10;
@@ -63,11 +66,11 @@ int main(int argc, char **argv)
         "{g generate-config |      | generate default config file in the given path}";
 
     cv::CommandLineParser parser(argc, argv, keys);
-    if (parser.has("help") || argc == 1)
-    {
-        parser.printMessage();
-        return 0;
-    }
+    // if (parser.has("help") || argc == 1)
+    // {
+    //     parser.printMessage();
+    //     return 0;
+    // }
     if (parser.has("generate-config"))
     {
         std::string config_path_str = parser.get<cv::String>("g");
@@ -115,7 +118,7 @@ int main(int argc, char **argv)
         config_file >> tmp_config;
         for (auto &[key, val] : tmp_config.items())
         {
-            if (key == "save_intermediate_steps" || key == "verbose")
+            if (key == "save_intermediate_steps" || key == "verbose" || key == "focal_length" || key == "principal_point")
             {
                 config[key] = val;
             }
@@ -158,7 +161,15 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    std::vector<LineSegment> lines = detectLines(img);
+    cv::Point2d principal_point(config["principal_point"][0],config["principal_point"][1]);
+    if(principal_point.x < 0 || principal_point.x > img.rows || principal_point.y < 0 || principal_point.y > img.cols){
+        principal_point = cv::Point2d(img.rows/2.0, img.cols/2.0);
+    }
+    if (config["verbose"]){
+        std::cout << "Principal point: " << principal_point << "\n";
+    }
+
+    std::vector<LineSegment> lines = detectLines(img, principal_point);
 
     auto end1 = high_resolution_clock::now();
     std::chrono::duration<double> duration1 = end1 - start;
@@ -169,19 +180,24 @@ int main(int argc, char **argv)
         std::cout << "line search took: " << duration1.count() << " seconds" << std::endl;
     }
 
-    double f = config["focal_length_estimation"]["focal_length"];
+    double f = config["focal_length"];
+    std::vector<LineSegment> lines_with_vanishing_points;
     if (f <= 0)
     {
-        f = findFocalLength(lines, config["focal_length_estimation"]["adjacency_relative_length_threshold"],
+        lines_with_vanishing_points = lines;
+        f = findFocalLength(lines_with_vanishing_points,
+                            config["focal_length_estimation"]["adjacency_relative_length_threshold"],
                             config["focal_length_estimation"]["adjacency_angle_threshold"],
                             config["focal_length_estimation"]["vanishing_point_relative_threshold"],
                             config["focal_length_estimation"]["vanishing_point_absolute_threshold"]);
         f *= config["focal_length_estimation"]["focal_length_mult"];
+
+        if (f == 0)
+        {
+            f = std::min(img.rows, img.cols);
+        }
     }
-    if (f == 0)
-    {
-        f = std::max(img.rows, img.cols);
-    }
+
     auto end2 = high_resolution_clock::now();
     std::chrono::duration<double> duration2 = end2 - end1;
     if (config["verbose"])
@@ -213,7 +229,7 @@ int main(int argc, char **argv)
     distributeLinesBeetweenPlanes(planes, lines, f, config["plane_orientation_detection"]["ransac_threshold"],
                                   config["plane_labeling"]["adjacency_relative_length_threshold"],
                                   config["plane_labeling"]["adjacency_angle_threshold"]);
-    std::vector<cv::Mat> masks = findPlaneRegions(planes, lines, f, img.size());
+    std::vector<cv::Mat> masks = findPlaneRegions(planes, lines, f, principal_point, img.size());
     std::vector<cv::Mat> processed_masks = processPlanes(masks, config["plane_post_processing"]["noise_relative_part"],
                                                          config["plane_post_processing"]["gaps_relative_part"]);
 
@@ -226,21 +242,26 @@ int main(int argc, char **argv)
         std::cout << "plane labeling took: " << duration4.count() << " seconds" << std::endl;
     }
 
-    std::vector<cv::Scalar> planeColors;
+    std::vector<cv::Scalar> plane_colors;
 
     for (int i = 0; i < processed_masks.size(); ++i)
     {
         cv::Scalar line_color;
         randu(line_color, cv::Scalar(0, 0, 0), cv::Scalar(255, 255, 255));
-        planeColors.push_back(line_color);
+        plane_colors.push_back(line_color);
     }
 
     if (config["save_intermediate_steps"])
     {
+        int line_width = std::max(1,std::min(img.rows,img.cols)/400);
+        for(LineSegment& line : lines){
+            line.start += principal_point;
+            line.end += principal_point;
+        }
         cv::Mat img_clone1 = img.clone();
         for (const LineSegment &line : lines)
         {
-            cv::line(img_clone1, line.start, line.end, cv::Scalar(), 4);
+            cv::line(img_clone1, line.start, line.end, cv::Scalar(), line_width);
         }
         cv::Mat img_clone2 = img.clone();
         for (int i = 0; i < lines.size(); ++i)
@@ -249,7 +270,7 @@ int main(int argc, char **argv)
             {
                 if (!planes[p].adjacency_graph[i].empty())
                 {
-                    cv::line(img_clone2, lines[i].start, lines[i].end, planeColors[p], 4);
+                    cv::line(img_clone2, lines[i].start, lines[i].end, plane_colors[p], line_width);
                 }
             }
         }
@@ -257,7 +278,7 @@ int main(int argc, char **argv)
         cv::Mat img_clone3 = img.clone();
         for (int p = 0; p < planes.size(); ++p)
         {
-            cv::Mat plane_color_mat(img.size(), img.type(), planeColors[p]);
+            cv::Mat plane_color_mat(img.size(), img.type(), plane_colors[p]);
             cv::Mat dst;
             cv::addWeighted(img_clone3, 0.5, plane_color_mat, 0.5, 0.0, dst);
             cv::copyTo(dst, img_clone3, masks[p]);
@@ -267,7 +288,7 @@ int main(int argc, char **argv)
 
         for (int p = 0; p < processed_masks.size(); ++p)
         {
-            cv::Mat plane_color_mat(img.size(), img.type(), planeColors[p]);
+            cv::Mat plane_color_mat(img.size(), img.type(), plane_colors[p]);
             cv::Mat dst;
             cv::addWeighted(img_clone4, 0.5, plane_color_mat, 0.5, 0.0, dst);
             cv::copyTo(dst, img_clone4, processed_masks[p]);
@@ -281,13 +302,39 @@ int main(int argc, char **argv)
         cv::imwrite(out_path2, img_clone2);
         cv::imwrite(out_path3, img_clone3);
         cv::imwrite(out_path4, img_clone4);
+
+        if (!lines_with_vanishing_points.empty())
+        {
+            for(LineSegment& line : lines_with_vanishing_points){
+                line.start += principal_point;
+                line.end += principal_point;
+            }
+            std::vector<cv::Scalar> vanishing_point_colors;
+            cv::Mat img_clone_extra = img.clone();
+            for (const auto &line : lines_with_vanishing_points)
+            {
+                if (vanishing_point_colors.size() <= line.vp_id)
+                {
+                    vanishing_point_colors.resize(line.vp_id + 1);
+                }
+                if (vanishing_point_colors[line.vp_id] == cv::Scalar())
+                {
+                    cv::Scalar line_color;
+                    randu(line_color, cv::Scalar(16, 16, 16), cv::Scalar(255, 255, 255));
+                    vanishing_point_colors[line.vp_id] = line_color;
+                }
+                cv::line(img_clone_extra, line.start, line.end, vanishing_point_colors[line.vp_id], line_width);
+            }
+            std::string out_path_extra = (out_dir_path / (filename + "_detected_vanishing_points.png")).string();
+            cv::imwrite(out_path_extra, img_clone_extra);
+        }
     }
 
     std::string out_path = (out_dir_path / (filename + "_result.png")).string();
     cv::Mat result(img.size(), CV_8UC3, cv::Scalar());
     for (int p = 0; p < processed_masks.size(); ++p)
     {
-        cv::Mat plane_color_mat(img.size(), CV_8UC3, planeColors[p]);
+        cv::Mat plane_color_mat(img.size(), CV_8UC3, plane_colors[p]);
         cv::copyTo(plane_color_mat, result, processed_masks[p]);
     }
     cv::imwrite(out_path, result);

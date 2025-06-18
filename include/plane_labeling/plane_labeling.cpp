@@ -258,7 +258,7 @@ void drawContour4(cv::Mat &image, std::vector<cv::Point2f> vertices2f, cv::Scala
 }
 
 std::vector<cv::Mat> findPlaneRegions(const std::vector<PlaneInfo> &planes, const std::vector<LineSegment> &lines,
-                                      double f, cv::Size img_size)
+                                      double f, cv::Point2f principal_point, cv::Size img_size)
 {
     if (planes.empty())
     {
@@ -304,6 +304,12 @@ std::vector<cv::Mat> findPlaneRegions(const std::vector<PlaneInfo> &planes, cons
     for (int i = 0; i < polygons_count; ++i)
     {
         polygons_goodness.push_back(findGoodnessScore(polygons[i], polygons_plane[i], intersection_points));
+    }
+    for (int i = 0; i < polygons_count; ++i)
+    {
+        for(cv::Point2f& point : polygons[i]){
+            point += principal_point;
+        }
     }
 
     std::vector<std::set<int>> graph = findConflictGraph(polygons, polygons_plane, planes.size());

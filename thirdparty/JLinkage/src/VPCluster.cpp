@@ -172,8 +172,6 @@ namespace VPCluster {
 		
 		counterCl = 0;
 		for(std::list<sClLnk *>::iterator iterCl = mClustersList.begin(); iterCl != mClustersList.end(); ++iterCl){
-
-			int vpCnt = 0;
 			float min_weight = 1e20f;
 			for(int i=0; i<(*iterCl)->mPreferenceSet.size();++i){
 				if((*iterCl)->mPreferenceSet[i]){

@@ -65,22 +65,26 @@ bool areAdjacent(const LineSegment &lhs, const LineSegment &rhs, double relative
     return true;
 }
 
-std::vector<LineSegment> detectLines(cv::Mat src)
+std::vector<LineSegment> detectLines(cv::Mat img, cv::Point2d principal_point)
 {
-    cv::Ptr<cv::LineSegmentDetector> lsd = cv::createLineSegmentDetector();
-
     cv::Mat grayImage;
+    cv::cvtColor(img, grayImage, cv::COLOR_BGR2GRAY);
 
-    cv::cvtColor(src, grayImage, cv::COLOR_BGR2GRAY);
-
+    cv::Ptr<cv::LineSegmentDetector> lsd = cv::createLineSegmentDetector();
     std::vector<cv::Vec4f> detected_lines;
     lsd->detect(grayImage, detected_lines);
+
+
     int n = detected_lines.size();
     std::vector<LineSegment> lines;
     lines.reserve(n);
     for (size_t i = 0; i < n; i++)
     {
         lines.emplace_back(detected_lines[i]);
+    }
+    for(LineSegment& line : lines){
+        line.start -= principal_point;
+        line.end -= principal_point;
     }
     return lines;
 }

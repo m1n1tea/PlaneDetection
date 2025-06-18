@@ -41,7 +41,7 @@ std::vector<std::vector<int>> findAdjacencyGraph(const std::vector<LineSegment> 
 void remove_lines(std::vector<LineSegment> &lines, std::vector<std::vector<int>> &adjacency_graph,
                   const std::vector<uint8_t> &mask, bool remove_zeros);
 
-std::vector<LineSegment> detectLines(cv::Mat img);
+std::vector<LineSegment> detectLines(cv::Mat img, cv::Point2d principal_point);
 
 class OrthoganalityMetricFunction : public cv::MinProblemSolver::Function
 {

@@ -19,7 +19,7 @@ std::vector<cv::Point3d> findVanishingPoints(std::vector<LineSegment> &lines)
     std::vector<unsigned int> Labels;
     std::vector<unsigned int> LabelCount;
     std::vector<unsigned int> modelIndex;
-    std::vector<std::vector<float> *> *mModels = VPSample::run(&pts, 5000, 2, 0, 1);
+    std::vector<std::vector<float> *> *mModels = VPSample::run(&pts, 15000, 2, 0, 1);
     int classNum = VPCluster::run(Labels, LabelCount, modelIndex, &pts, mModels, 1.0, 2);
 
     std::vector<cv::Point3d> vps(modelIndex.size());
@@ -122,22 +122,21 @@ double estimateFocalLength(const std::vector<cv::Point3d> &vanishing_points,
     return std::sqrt(-num_sum / denom_sum);
 }
 
-double findFocalLength(const std::vector<LineSegment> &lines, double relative_dist_threshold, double angle_threshold,
+double findFocalLength(std::vector<LineSegment> &lines, double relative_dist_threshold, double angle_threshold,
                        double vanishing_points_relative_threshold, double vanishing_points_absolute_threshold)
 {
-    std::vector<LineSegment> lines_copy = lines;
     std::vector<std::vector<int>> adjacency_graph =
-        findAdjacencyGraph(lines_copy, relative_dist_threshold, angle_threshold);
+        findAdjacencyGraph(lines, relative_dist_threshold, angle_threshold);
 
-    std::vector<uint8_t> singleLines(lines_copy.size(), 0);
-    for (int i = 0; i < lines_copy.size(); ++i)
+    std::vector<uint8_t> singleLines(lines.size(), 0);
+    for (int i = 0; i < lines.size(); ++i)
     {
         singleLines[i] = adjacency_graph[i].empty();
     }
-    remove_lines(lines_copy, adjacency_graph, singleLines, false);
+    remove_lines(lines, adjacency_graph, singleLines, false);
 
-    std::vector<cv::Point3d> vps = findVanishingPoints(lines_copy);
+    std::vector<cv::Point3d> vps = findVanishingPoints(lines);
     std::vector<std::vector<uint32_t>> orth_mat = findOrthMat(
-        adjacency_graph, lines_copy, vps, vanishing_points_relative_threshold, vanishing_points_absolute_threshold);
+        adjacency_graph, lines, vps, vanishing_points_relative_threshold, vanishing_points_absolute_threshold);
     return estimateFocalLength(vps, orth_mat);
 }

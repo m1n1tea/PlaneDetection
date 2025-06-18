@@ -11,7 +11,7 @@ std::vector<std::vector<uint32_t>> findOrthMat(const std::vector<std::vector<int
                                                double vanishing_points_absolute_threshold);
 double estimateFocalLength(const std::vector<cv::Point3d> &vanishing_points,
                            const std::vector<std::vector<uint32_t>> &orth_mat);
-double findFocalLength(const std::vector<LineSegment> &lines_for_vanishing_points, double relative_dist_threshold,
+double findFocalLength(std::vector<LineSegment> &lines_for_vanishing_points, double relative_dist_threshold,
                        double angle_threshold, double vanishing_points_relative_threshold,
                        double vanishing_points_absolute_threshold);
 
