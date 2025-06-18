@@ -10,14 +10,14 @@ find_package(nlohmann_json REQUIRED)
 add_subdirectory(thirdparty)
 add_subdirectory(include)
 
-add_executable(main main.cpp)
+add_executable(plane_detector plane_detector.cpp)
 
 add_executable(compare_planes compare_planes.cpp)
 
-target_link_libraries(main PRIVATE ${OpenCV_LIBS} nlohmann_json::nlohmann_json plane_detection_utils focal_length_estimation plane_orientation_detection plane_labeling plane_post_processing)
+target_link_libraries(plane_detector PRIVATE ${OpenCV_LIBS} nlohmann_json::nlohmann_json plane_detection_utils focal_length_estimation plane_orientation_detection plane_labeling plane_post_processing)
 target_link_libraries(compare_planes PRIVATE  ${OpenCV_LIBS} nlohmann_json::nlohmann_json result_evaluation)
 
-set_property(TARGET main PROPERTY CXX_STANDARD 20)
+set_property(TARGET plane_detector PROPERTY CXX_STANDARD 20)
 
 set_property(TARGET compare_planes PROPERTY CXX_STANDARD 20)
 
