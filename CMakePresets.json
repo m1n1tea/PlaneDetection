@@ -52,6 +52,20 @@
       "displayName": "",
       "configurePreset": "windows_debug",
       "configuration": "Debug"
+    },
+    {
+      "name": "linux_release",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "linux_release",
+      "configuration": "Release"
+    },
+    {
+      "name": "linux_debug",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "linux_debug",
+      "configuration": "Debug"
     }
   ]
 }

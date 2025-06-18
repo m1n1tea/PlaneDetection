@@ -32,22 +32,22 @@ nlohmann::json getDefaultConfig()
     config["principal_point"][1] = -1;
 
     config["focal_length_estimation"] = nlohmann::json();
-    config["focal_length_estimation"]["adjacency_relative_length_threshold"] = 1.02;
+    config["focal_length_estimation"]["adjacency_relative_length_threshold"] = 0.02;
     config["focal_length_estimation"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
     config["focal_length_estimation"]["vanishing_point_relative_threshold"] = 0.1;
     config["focal_length_estimation"]["vanishing_point_absolute_threshold"] = 10;
     config["focal_length_estimation"]["focal_length_mult"] = 1;
 
     config["plane_orientation_detection"] = nlohmann::json();
-    config["plane_orientation_detection"]["adjacency_relative_length_threshold"] = 1.25;
+    config["plane_orientation_detection"]["adjacency_relative_length_threshold"] = 0.25;
     config["plane_orientation_detection"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
-    config["plane_orientation_detection"]["ransac_threshold"] = 0.002;
+    config["plane_orientation_detection"]["ransac_threshold"] = 0.005;
     config["plane_orientation_detection"]["ransac_tries"] = 1000;
     config["plane_orientation_detection"]["plane_relative_threshold"] = 0.1;
     config["plane_orientation_detection"]["plane_absolute_threshold"] = 10;
 
     config["plane_labeling"] = nlohmann::json();
-    config["plane_labeling"]["adjacency_relative_length_threshold"] = 2;
+    config["plane_labeling"]["adjacency_relative_length_threshold"] = 1;
     config["plane_labeling"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
 
     config["plane_post_processing"] = nlohmann::json();
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
                             config["focal_length_estimation"]["adjacency_angle_threshold"],
                             config["focal_length_estimation"]["vanishing_point_relative_threshold"],
                             config["focal_length_estimation"]["vanishing_point_absolute_threshold"]);
-        f *= config["focal_length_estimation"]["focal_length_mult"];
+        f *= config["focal_length_estimation"]["focal_length_mult"].get<double>();
 
         if (f == 0)
         {

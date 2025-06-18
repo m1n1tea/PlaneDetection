@@ -11,7 +11,6 @@ add_subdirectory(thirdparty)
 add_subdirectory(include)
 
 add_executable(main main.cpp)
-
 add_executable(compare_planes compare_planes.cpp)
 
 target_link_libraries(main PRIVATE ${OpenCV_LIBS} nlohmann_json::nlohmann_json plane_detection_utils focal_length_estimation plane_orientation_detection plane_labeling plane_post_processing)
@@ -21,6 +20,19 @@ set_property(TARGET main PROPERTY CXX_STANDARD 20)
 
 set_property(TARGET compare_planes PROPERTY CXX_STANDARD 20)
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ TYPE BIN)
+
+
+
+if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
+# linux
+  install(TARGETS main)
+  install(TARGETS compare_planes)
+else()
+# windows      
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ TYPE BIN)
+endif()
+
+
+
 install(DIRECTORY ground_truth DESTINATION .)
 install(DIRECTORY images DESTINATION .)
