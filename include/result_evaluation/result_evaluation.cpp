@@ -170,6 +170,9 @@ nlohmann::json EvaluationResult::toJson(){
     result["false_negative_pixels"] = false_negative_pixels;
     result["false_positive_pixels"] = false_positive_pixels;
     result["ground_truth_labels"] = nlohmann::json::array();
+    result["f1_plane_deteciton"] = (2.0 * (correct_predicted_pixels + incorrect_predicted_pixels)) / (2 * (correct_predicted_pixels + incorrect_predicted_pixels) + false_negative_pixels + false_positive_pixels);
+    result["f1_plane_separation"] = (2.0 * (correct_predicted_pixels)) / (2 * (correct_predicted_pixels) + false_negative_pixels + false_positive_pixels + incorrect_predicted_pixels);
+
 
     for(const auto& [ground_truth_color, predicted_color, iou] : iou_per_ground_truth_plane){
         nlohmann::json plane;

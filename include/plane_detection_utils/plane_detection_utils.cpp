@@ -36,6 +36,7 @@ cv::Point2d getIntersection(const LineSegment &lhs, const LineSegment &rhs)
 
 bool areAdjacent(const LineSegment &lhs, const LineSegment &rhs, double relative_dist_threshold, double angle_threshold)
 {
+    relative_dist_threshold +=1;
     double cos_threshold = std::cos(angle_threshold);
 
     cv::Point2d vec1 = lhs.getVector();
