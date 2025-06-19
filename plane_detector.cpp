@@ -27,21 +27,21 @@ nlohmann::json getDefaultConfig()
     config["save_intermediate_steps"] = false;
     config["verbose"] = true;
     config["focal_length"] = 0;
+    config["principal_point_in_the_middle"] = true;
     config["principal_point"] = nlohmann::json::array();
-    config["principal_point"][0] = -1;
-    config["principal_point"][1] = -1;
+    config["principal_point"][0] = 0;
+    config["principal_point"][1] = 0;
 
     config["focal_length_estimation"] = nlohmann::json();
     config["focal_length_estimation"]["adjacency_relative_length_threshold"] = 0.02;
     config["focal_length_estimation"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
     config["focal_length_estimation"]["vanishing_point_relative_threshold"] = 0.1;
     config["focal_length_estimation"]["vanishing_point_absolute_threshold"] = 10;
-    config["focal_length_estimation"]["focal_length_mult"] = 1;
 
     config["plane_orientation_detection"] = nlohmann::json();
     config["plane_orientation_detection"]["adjacency_relative_length_threshold"] = 0.25;
     config["plane_orientation_detection"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
-    config["plane_orientation_detection"]["ransac_threshold"] = 0.005;
+    config["plane_orientation_detection"]["ransac_threshold"] = 0.01;
     config["plane_orientation_detection"]["ransac_tries"] = 1000;
     config["plane_orientation_detection"]["plane_relative_threshold"] = 0.1;
     config["plane_orientation_detection"]["plane_absolute_threshold"] = 10;
@@ -66,11 +66,11 @@ int main(int argc, char **argv)
         "{g generate-config |      | generate default config file in the given path}";
 
     cv::CommandLineParser parser(argc, argv, keys);
-    // if (parser.has("help") || argc == 1)
-    // {
-    //     parser.printMessage();
-    //     return 0;
-    // }
+    if (parser.has("help") || argc == 1)
+    {
+        parser.printMessage();
+        return 0;
+    }
     if (parser.has("generate-config"))
     {
         std::string config_path_str = parser.get<cv::String>("g");
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
             std::cout << "invalid generated-config path\n";
             return 1;
         }
-        config_file << getDefaultConfig();
+        config_file << getDefaultConfig().dump(2);
         config_file.close();
         return 0;
     }
@@ -162,11 +162,11 @@ int main(int argc, char **argv)
     }
 
     cv::Point2d principal_point(config["principal_point"][0],config["principal_point"][1]);
-    if(principal_point.x < 0 || principal_point.x > img.rows || principal_point.y < 0 || principal_point.y > img.cols){
+    if(config["principal_point_in_the_middle"]){
         principal_point = cv::Point2d(img.rows/2.0, img.cols/2.0);
     }
     if (config["verbose"]){
-        std::cout << "Principal point: " << principal_point << "\n";
+        std::cout << "principal point: " << principal_point << "\n";
     }
 
     std::vector<LineSegment> lines = detectLines(img, principal_point);
@@ -190,7 +190,6 @@ int main(int argc, char **argv)
                             config["focal_length_estimation"]["adjacency_angle_threshold"],
                             config["focal_length_estimation"]["vanishing_point_relative_threshold"],
                             config["focal_length_estimation"]["vanishing_point_absolute_threshold"]);
-        f *= config["focal_length_estimation"]["focal_length_mult"].get<double>();
 
         if (f == 0)
         {

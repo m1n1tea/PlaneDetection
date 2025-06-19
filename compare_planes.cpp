@@ -49,5 +49,5 @@ int main(int argc, char **argv)
 
     EvaluationResult result = evaluateResult(predicted_img, ground_truth_img);
 
-    std::cout << result.toJson();
+    std::cout << result.toJson().dump(2);
 }
