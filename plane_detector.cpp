@@ -51,7 +51,7 @@ nlohmann::json getDefaultConfig()
     config["plane_labeling"]["adjacency_angle_threshold"] = std::numbers::pi / 18;
 
     config["plane_post_processing"] = nlohmann::json();
-    config["plane_post_processing"]["noise_relative_part"] = 0.05;
+    config["plane_post_processing"]["noise_relative_part"] = 0.15;
     config["plane_post_processing"]["gaps_relative_part"] = 0.05;
     return config;
 }
@@ -63,7 +63,8 @@ int main(int argc, char **argv)
         "{@image            |<none>| source image }"
         "{@output_dir       |   .  | directory path to store result }"
         "{c config          |<none>| config file }"
-        "{g generate-config |      | generate default config file in the given path}";
+        "{g generate-config |      | generate default config file in the given path}"
+        "{f focal-length    |<none>| set focal length manually, overwrites config focal length}";
 
     cv::CommandLineParser parser(argc, argv, keys);
     if (parser.has("help") || argc == 1)
@@ -104,6 +105,7 @@ int main(int argc, char **argv)
     if (parser.has("config"))
     {
         fs::path config_path(parser.get<cv::String>("c"));
+        config_path = fs::absolute(config_path);
         std::ifstream config_file;
         if (fs::is_regular_file(config_path))
         {
@@ -118,7 +120,8 @@ int main(int argc, char **argv)
         config_file >> tmp_config;
         for (auto &[key, val] : tmp_config.items())
         {
-            if (key == "save_intermediate_steps" || key == "verbose" || key == "focal_length" || key == "principal_point")
+            if (key == "save_intermediate_steps" || key == "verbose" || key == "focal_length" ||
+                key == "principal_point")
             {
                 config[key] = val;
             }
@@ -134,6 +137,7 @@ int main(int argc, char **argv)
     }
 
     std::string in_path = parser.get<cv::String>("@image");
+    in_path = fs::absolute(in_path).string();
     if (!fs::is_regular_file(in_path))
     {
         std::cout << "invalid source image path\n";
@@ -161,11 +165,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    cv::Point2d principal_point(config["principal_point"][0],config["principal_point"][1]);
-    if(config["principal_point_in_the_middle"]){
-        principal_point = cv::Point2d(img.rows/2.0, img.cols/2.0);
+    cv::Point2d principal_point(config["principal_point"][0], config["principal_point"][1]);
+    if (config["principal_point_in_the_middle"])
+    {
+        principal_point = cv::Point2d(img.rows / 2.0, img.cols / 2.0);
     }
-    if (config["verbose"]){
+    if (config["verbose"])
+    {
         std::cout << "principal point: " << principal_point << "\n";
     }
 
@@ -181,6 +187,10 @@ int main(int argc, char **argv)
     }
 
     double f = config["focal_length"];
+    if (parser.has("focal-length"))
+    {
+        f = parser.get<double>("f");
+    }
     std::vector<LineSegment> lines_with_vanishing_points;
     if (f <= 0)
     {
@@ -252,8 +262,9 @@ int main(int argc, char **argv)
 
     if (config["save_intermediate_steps"])
     {
-        int line_width = std::max(1,std::min(img.rows,img.cols)/400);
-        for(LineSegment& line : lines){
+        int line_width = std::max(1, std::min(img.rows, img.cols) / 400);
+        for (LineSegment &line : lines)
+        {
             line.start += principal_point;
             line.end += principal_point;
         }
@@ -304,7 +315,8 @@ int main(int argc, char **argv)
 
         if (!lines_with_vanishing_points.empty())
         {
-            for(LineSegment& line : lines_with_vanishing_points){
+            for (LineSegment &line : lines_with_vanishing_points)
+            {
                 line.start += principal_point;
                 line.end += principal_point;
             }

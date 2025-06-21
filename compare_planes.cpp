@@ -24,6 +24,7 @@ int main(int argc, char **argv)
     }
 
     std::string predicted_image_path = parser.get<cv::String>("@predicted_image");
+    predicted_image_path = fs::absolute(predicted_image_path).string();
     if (!fs::is_regular_file(predicted_image_path))
     {
         std::cout << "invalid predictede image path\n";
@@ -31,6 +32,7 @@ int main(int argc, char **argv)
     }
 
     std::string ground_trurh_image_path = parser.get<cv::String>("@ground_truth_image");
+    ground_trurh_image_path = fs::absolute(ground_trurh_image_path).string();
     if (!fs::is_regular_file(ground_trurh_image_path))
     {
         std::cout << "invalid ground truth image path\n";
