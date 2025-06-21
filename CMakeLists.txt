@@ -24,11 +24,15 @@ set_property(TARGET compare_planes PROPERTY CXX_STANDARD 20)
 
 if(${CMAKE_GENERATOR} STREQUAL "Unix Makefiles")
 # linux
-  install(TARGETS main)
+  install(TARGETS plane_detector)
   install(TARGETS compare_planes)
+  install(PROGRAMS ${CMAKE_SOURCE_DIR}/scripts/generate_predictions_and_output_with_focal_length.sh DESTINATION demo_scripts)
+  install(PROGRAMS ${CMAKE_SOURCE_DIR}/scripts/generate_predictions_and_output.sh DESTINATION demo_scripts)
 else()
 # windows      
   install(DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/ TYPE BIN)
+  install(PROGRAMS ${CMAKE_SOURCE_DIR}/scripts/generate_predictions_and_output_with_focal_length.ps1 DESTINATION demo_scripts)
+  install(PROGRAMS ${CMAKE_SOURCE_DIR}/scripts/generate_predictions_and_output.ps1 DESTINATION demo_scripts)
 endif()
 
 
